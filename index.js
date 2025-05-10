@@ -35,7 +35,7 @@ function onEnabledChanged(event) {
 
 // This function is called when the button is clicked
 function onTestButtonClicked() {
-  // You can do whatever you want here
+  let context = getContext();
   // Let's make a popup appear with the checked setting
   toastr.info(
     `The checkbox is ${extension_settings[extensionName].example_setting ? "checked" : "not checked"}`,
@@ -60,3 +60,4 @@ jQuery(async () => {
   // Load settings when starting things up (if you have any)
   loadSettings();
 });
+
