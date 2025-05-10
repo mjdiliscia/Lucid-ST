@@ -10,41 +10,35 @@ import { saveSettingsDebounced, event_types, eventSource } from "../../../../scr
 const extensionName = "SillyTavern-Lucid";
 const extensionFolderPath = `scripts/extensions/third-party/${extensionName}`;
 const extensionSettings = extension_settings[extensionName];
-const defaultSettings = {};
+const defaultSettings = {
+  narrator_substr: "narrator",
+  assistant_substr: "assistant"
+};
 
 eventSource.on(event_types.GENERATE_BEFORE_COMBINE_PROMPTS, (data) => {
   let messages = data.finalMesSend;
-  let narratorRE = /<\|start_header_id\|>writer character (.*narrator[^<]*)<\|end_header_id\|>/;
-  let assistantRE = /<\|start_header_id\|>writer character (.*assistant[^<]*)<\|end_header_id\|>/;
-  let oocRE = /<\|start_header_id\|>writer character ([^<]+)<\|end_header_id\|>[\n\r]*\(\(Out-of-Character\)\)/;
+  let narratorRE = new RegExp(`<\\|start_header_id\\|>writer character (.*${extensionSettings.narrator_substr}[^<]*)<\\|end_header_id\\|>`);
+  let assistantRE = new RegExp(`<\\|start_header_id\\|>writer character (.*${extensionSettings.assistant_substr}[^<]*)<\\|end_header_id\\|>`);
+  let oocRE = new RegExp(`<\\|start_header_id\\|>writer character ([^<]+)<\\|end_header_id\\|>([\\n\\r]*)\\(\\(Out-of-Character\\)\\)`);
 
   for (let index = 0; index < messages.length; index++) {
     let currentMessage = messages[index];
 
     let match = currentMessage.message.match(narratorRE);
     while (match) {
-      console.log("FROM: ", currentMessage.message)
       currentMessage.message = currentMessage.message.replace(narratorRE, "<|start_header_id|>writer narration<|end_header_id|>")
-      console.log("TO: ", currentMessage.message)
-
       match = currentMessage.message.match(narratorRE);
     }
 
     match = currentMessage.message.match(assistantRE);
     while (match) {
-      console.log("FROM: ", currentMessage.message)
       currentMessage.message = currentMessage.message.replace(assistantRE, "<|start_header_id|>assistant<|end_header_id|>")
-      console.log("TO: ", currentMessage.message)
-
       match = currentMessage.message.match(assistantRE);
     }
 
     match = currentMessage.message.match(oocRE);
     while (match) {
-      console.log("FROM: ", currentMessage.message)
-      currentMessage.message = currentMessage.message.replace(oocRE, "<|start_header_id|>user<|end_header_id|>")
-      console.log("TO: ", currentMessage.message)
-
+      currentMessage.message = currentMessage.message.replace(oocRE, "<|start_header_id|>user<|end_header_id|>$2")
       match = currentMessage.message.match(oocRE);
     }
   }
@@ -52,31 +46,25 @@ eventSource.on(event_types.GENERATE_BEFORE_COMBINE_PROMPTS, (data) => {
 
 // Loads the extension settings if they exist, otherwise initializes them to the defaults.
 async function loadSettings() {
-  //Create the settings if they don't exist
-  extension_settings[extensionName] = extension_settings[extensionName] || {};
-  if (Object.keys(extension_settings[extensionName]).length === 0) {
-    Object.assign(extension_settings[extensionName], defaultSettings);
+  for (let property in defaultSettings) {
+    if (extensionSettings[property] === undefined) {
+      extensionSettings[property] = defaultSettings[property];
+    }
   }
 
   // Updating settings in the UI
-  $("#example_setting").prop("checked", extension_settings[extensionName].example_setting).trigger("input");
+  $("#narrator_substr_setting").prop("value", extensionSettings.narrator_substr);
+  $("#assistant_substr_setting").prop("value", extensionSettings.assistant_substr);
 }
 
-// This function is called when the extension settings are changed in the UI
-function onEnabledChanged(event) {
-  const value = Boolean($(event.target).prop("checked"));
-  extension_settings[extensionName].example_setting = value;
+function onNarratorSubstrChanged(event) {
+  extensionSettings.narrator_substr = $(event.target).prop("value");
   saveSettingsDebounced();
 }
 
-// This function is called when the button is clicked
-function onTestButtonClicked() {
-  let context = getContext();
-  // Let's make a popup appear with the checked setting
-  toastr.info(
-    `The checkbox is ${extension_settings[extensionName].example_setting ? "checked" : "not checked"}`,
-    "A popup appeared because you clicked the button!"
-  );
+function onAssistantSubstrChanged(event) {
+  extensionSettings.assistant_substr = $(event.target).prop("value");
+  saveSettingsDebounced();
 }
 
 // This function is called when the extension is loaded
@@ -90,8 +78,8 @@ jQuery(async () => {
   $("#extensions_settings").append(settingsHtml);
 
   // These are examples of listening for events
-  $("#test_button").on("click", onTestButtonClicked);
-  $("#enabled_setting").on("input", onEnabledChanged);
+  $("#narrator_substr_setting").on("input", onNarratorSubstrChanged);
+  $("#assistant_substr_setting").on("input", onAssistantSubstrChanged);
 
   // Load settings when starting things up (if you have any)
   loadSettings();
