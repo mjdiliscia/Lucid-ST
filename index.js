@@ -4,7 +4,7 @@
 import { extension_settings, getContext, loadExtensionSettings } from "../../../extensions.js";
 
 //You'll likely need to import some other functions from the main script
-import { saveSettingsDebounced } from "../../../../script.js";
+import { saveSettingsDebounced, event_types, eventSource } from "../../../../script.js";
 
 // Keep track of where your extension is located, name should match repo name
 const extensionName = "SillyTavern-Lucid";
@@ -12,7 +12,43 @@ const extensionFolderPath = `scripts/extensions/third-party/${extensionName}`;
 const extensionSettings = extension_settings[extensionName];
 const defaultSettings = {};
 
+eventSource.on(event_types.GENERATE_BEFORE_COMBINE_PROMPTS, (data) => {
+  let messages = data.finalMesSend;
+  let narratorRE = /<\|start_header_id\|>writer character (.*narrator[^<]*)<\|end_header_id\|>/;
+  let assistantRE = /<\|start_header_id\|>writer character (.*assistant[^<]*)<\|end_header_id\|>/;
+  let oocRE = /<\|start_header_id\|>writer character ([^<]+)<\|end_header_id\|>\(\(Out-of-Character\)\)/;
 
+  for (let index = 0; index < messages.length; index++) {
+    let currentMessage = messages[index];
+
+    let match = currentMessage.message.match(narratorRE);
+    while (match) {
+      console.log("FROM: ", currentMessage.message)
+      currentMessage.message = currentMessage.message.replace(narratorRE, "<|start_header_id|>writer narration<|end_header_id|>")
+      console.log("TO: ", currentMessage.message)
+
+      match = currentMessage.message.match(narratorRE);
+    }
+
+    match = currentMessage.message.match(assistantRE);
+    while (match) {
+      console.log("FROM: ", currentMessage.message)
+      currentMessage.message = currentMessage.message.replace(assistantRE, "<|start_header_id|>assistant<|end_header_id|>")
+      console.log("TO: ", currentMessage.message)
+
+      match = currentMessage.message.match(assistantRE);
+    }
+
+    match = currentMessage.message.match(oocRE);
+    while (match) {
+      console.log("FROM: ", currentMessage.message)
+      currentMessage.message = currentMessage.message.replace(oocRE, "<|start_header_id|>user<|end_header_id|>")
+      console.log("TO: ", currentMessage.message)
+
+      match = currentMessage.message.match(oocRE);
+    }
+  }
+});
 
 // Loads the extension settings if they exist, otherwise initializes them to the defaults.
 async function loadSettings() {
