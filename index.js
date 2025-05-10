@@ -1,5 +1,4 @@
 // The main script for the extension
-// The following are examples of some basic extension functionality
 
 //You'll likely need to import extension_settings, getContext, and loadExtensionSettings from extensions.js
 import { extension_settings, getContext, loadExtensionSettings } from "../../../extensions.js";
@@ -8,13 +7,13 @@ import { extension_settings, getContext, loadExtensionSettings } from "../../../
 import { saveSettingsDebounced } from "../../../../script.js";
 
 // Keep track of where your extension is located, name should match repo name
-const extensionName = "st-extension-example";
+const extensionName = "SillyTavern-Lucid";
 const extensionFolderPath = `scripts/extensions/third-party/${extensionName}`;
 const extensionSettings = extension_settings[extensionName];
 const defaultSettings = {};
 
 
- 
+
 // Loads the extension settings if they exist, otherwise initializes them to the defaults.
 async function loadSettings() {
   //Create the settings if they don't exist
@@ -28,14 +27,14 @@ async function loadSettings() {
 }
 
 // This function is called when the extension settings are changed in the UI
-function onExampleInput(event) {
+function onEnabledChanged(event) {
   const value = Boolean($(event.target).prop("checked"));
   extension_settings[extensionName].example_setting = value;
   saveSettingsDebounced();
 }
 
 // This function is called when the button is clicked
-function onButtonClick() {
+function onTestButtonClicked() {
   // You can do whatever you want here
   // Let's make a popup appear with the checked setting
   toastr.info(
@@ -47,7 +46,7 @@ function onButtonClick() {
 // This function is called when the extension is loaded
 jQuery(async () => {
   // This is an example of loading HTML from a file
-  const settingsHtml = await $.get(`${extensionFolderPath}/example.html`);
+  const settingsHtml = await $.get(`${extensionFolderPath}/settings.html`);
 
   // Append settingsHtml to extensions_settings
   // extension_settings and extensions_settings2 are the left and right columns of the settings menu
@@ -55,8 +54,8 @@ jQuery(async () => {
   $("#extensions_settings").append(settingsHtml);
 
   // These are examples of listening for events
-  $("#my_button").on("click", onButtonClick);
-  $("#example_setting").on("input", onExampleInput);
+  $("#test_button").on("click", onTestButtonClicked);
+  $("#enabled_setting").on("input", onEnabledChanged);
 
   // Load settings when starting things up (if you have any)
   loadSettings();
