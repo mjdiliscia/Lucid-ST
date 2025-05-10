@@ -2,9 +2,12 @@
 
 //You'll likely need to import extension_settings, getContext, and loadExtensionSettings from extensions.js
 import { extension_settings, getContext, loadExtensionSettings } from "../../../extensions.js";
+import { SlashCommandParser } from '../../../slash-commands/SlashCommandParser.js';
+import { SlashCommandArgument, ARGUMENT_TYPE } from '../../../slash-commands/SlashCommandArgument.js';
+import { SlashCommand } from '../../../slash-commands/SlashCommand.js';
 
 //You'll likely need to import some other functions from the main script
-import { saveSettingsDebounced, event_types, eventSource } from "../../../../script.js";
+import { saveSettingsDebounced, event_types, eventSource, sendMessageAsUser } from "../../../../script.js";
 
 // Keep track of where your extension is located, name should match repo name
 const extensionName = "SillyTavern-Lucid";
@@ -67,6 +70,47 @@ function onAssistantSubstrChanged(event) {
   saveSettingsDebounced();
 }
 
+function runOOCSlashCommand(namedArgs, unnamedArgs) {
+  let message = "((Out-of-Character))\n" + unnamedArgs.toString();
+  sendMessageAsUser(message);
+  return message;
+}
+
+function setupOOCSlashCommand() {
+  SlashCommandParser.addCommandObject(SlashCommand.fromProps({
+    name: 'out-of-character',
+    callback: runOOCSlashCommand,
+    aliases: ['ooc'],
+    returns: 'sends an out-of-character message formatted for Lucid LLM',
+    namedArgumentList: [],
+    unnamedArgumentList: [
+      SlashCommandArgument.fromProps({
+        description: 'the message to send',
+        typeList: ARGUMENT_TYPE.STRING,
+        isRequired: true,
+      }),
+    ],
+    helpString: `
+        <div>
+            Sends an out-of-character message to the model.
+        </div>
+        <div>
+            <strong>Example:</strong>
+            <ul>
+                <li>
+                    <pre><code class="language-stscript">/ooc Be more clever</code></pre>
+                    returns "???"
+                </li>
+                <li>
+                    <pre><code class="language-stscript">/ooc Stop responding with long messages</code></pre>
+                    returns "???"
+                </li>
+            </ul>
+        </div>
+    `,
+  }));
+}
+
 // This function is called when the extension is loaded
 jQuery(async () => {
   // This is an example of loading HTML from a file
@@ -83,5 +127,7 @@ jQuery(async () => {
 
   // Load settings when starting things up (if you have any)
   loadSettings();
+
+  setupOOCSlashCommand();
 });
 
