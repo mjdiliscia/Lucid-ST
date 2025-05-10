@@ -16,7 +16,7 @@ eventSource.on(event_types.GENERATE_BEFORE_COMBINE_PROMPTS, (data) => {
   let messages = data.finalMesSend;
   let narratorRE = /<\|start_header_id\|>writer character (.*narrator[^<]*)<\|end_header_id\|>/;
   let assistantRE = /<\|start_header_id\|>writer character (.*assistant[^<]*)<\|end_header_id\|>/;
-  let oocRE = /<\|start_header_id\|>writer character ([^<]+)<\|end_header_id\|>\(\(Out-of-Character\)\)/;
+  let oocRE = /<\|start_header_id\|>writer character ([^<]+)<\|end_header_id\|>[\n\r]*\(\(Out-of-Character\)\)/;
 
   for (let index = 0; index < messages.length; index++) {
     let currentMessage = messages[index];
