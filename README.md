@@ -1,6 +1,6 @@
-# SillyTavern Extension Example
+# SillyTavern-Lucid Support Extension
 
-*Provide a brief description of how your extension works, what problem it aims to solve.*
+Basic support for internal Lucid's multi-character support.
 
 ## Features
 
@@ -30,4 +30,4 @@
 
 ## License
 
-*Be cool, use an open source license.*
+This extension is licensed as GPLv3 as stated in LICENSE.md file.
