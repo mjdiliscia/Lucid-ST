@@ -18,7 +18,7 @@ const defaultSettings = {
   assistant_substr: "assistant"
 };
 
-eventSource.on(event_types.GENERATE_BEFORE_COMBINE_PROMPTS, (data) => {
+function onPromptGenerated(data) {
   let messages = data.finalMesSend;
   let narratorRE = new RegExp(`<\\|start_header_id\\|>writer character (.*${extensionSettings.narrator_substr}[^<]*)<\\|end_header_id\\|>`);
   let assistantRE = new RegExp(`<\\|start_header_id\\|>writer character (.*${extensionSettings.assistant_substr}[^<]*)<\\|end_header_id\\|>`);
@@ -45,7 +45,36 @@ eventSource.on(event_types.GENERATE_BEFORE_COMBINE_PROMPTS, (data) => {
       match = currentMessage.message.match(oocRE);
     }
   }
-});
+}
+
+function onChatUpdated(messageId) {
+  let context = getContext();
+  let chat = $("#chat .mes");
+
+  chat.each((index, mes) => {
+    let messageId = Number($(mes).attr("mesid"));
+    let chatSpec = context.chat[messageId];
+
+    if (chatSpec.is_user && !chatSpec.is_system && chatSpec.mes.startsWith("((Out-of-Character))")) {
+      // Change is_user attribute for styling purposes
+      $(mes).attr("is_user", "false");
+
+      // Remove ((Out-of-Character)) mark
+      let message = $(mes).find(".mes_text").children("p").first();
+      let messageHTML = message.html();
+      messageHTML = messageHTML.replace("((Out-of-Character))<br>", "");
+      message.html(messageHTML);
+
+      // Change character name to "Out of Character"
+      $(mes).find(".name_text").text("Out of Character");
+
+      // Change avatar to ooc image
+      let avatarImg = $(mes).find(".avatar img");
+      let occPath = "/" + extensionFolderPath + "/ooc.png";
+      avatarImg.attr("src", occPath);
+    }
+  });
+}
 
 // Loads the extension settings if they exist, otherwise initializes them to the defaults.
 async function loadSettings() {
@@ -129,5 +158,16 @@ jQuery(async () => {
   loadSettings();
 
   setupOOCSlashCommand();
+
+  eventSource.on(event_types.GENERATE_BEFORE_COMBINE_PROMPTS, onPromptGenerated);
+  eventSource.on(event_types.MORE_MESSAGES_LOADED, onChatUpdated);
+  eventSource.on(event_types.CHAT_CHANGED, onChatUpdated);
+  eventSource.on(event_types.MESSAGE_SWIPED, onChatUpdated);
+  eventSource.on(event_types.MESSAGE_SENT, onChatUpdated);
+  eventSource.on(event_types.MESSAGE_RECEIVED, onChatUpdated);
+  eventSource.on(event_types.MESSAGE_EDITED, onChatUpdated);
+  eventSource.on(event_types.MESSAGE_DELETED, onChatUpdated);
+  eventSource.on(event_types.MESSAGE_UPDATED, onChatUpdated);
+  eventSource.on(event_types.USER_MESSAGE_RENDERED, onChatUpdated);
 });
 
