@@ -70,7 +70,7 @@ function onChatUpdated(messageId) {
 
       // Change avatar to ooc image
       let avatarImg = $(mes).find(".avatar img");
-      let occPath = "/" + extensionFolderPath + "/ooc.png";
+      let occPath = "/" + extensionFolderPath + "/img/ooc.png";
       avatarImg.attr("src", occPath);
     }
   });
