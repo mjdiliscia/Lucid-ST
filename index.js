@@ -10,36 +10,51 @@ import { SlashCommand } from '../../../slash-commands/SlashCommand.js';
 import { saveSettingsDebounced, event_types, eventSource, sendMessageAsUser } from "../../../../script.js";
 
 // Keep track of where your extension is located, name should match repo name
+const oocImagePath = "img/ooc.png";
 const extensionName = "SillyTavern-Lucid";
 const extensionFolderPath = `scripts/extensions/third-party/${extensionName}`;
 const extensionSettings = extension_settings[extensionName];
 const defaultSettings = {
-  narrator_substr: "narrator",
-  assistant_substr: "assistant"
 };
 
 function onPromptGenerated(data) {
+  const context = getContext();
+
+  const lucidNarratorTag = context.tags.find((value) => { return value.name == "lucid_narrator"; });
+  const lucidNarratorTagId = lucidNarratorTag ? lucidNarratorTag.id : null;
+  const lucidAssistantTag = context.tags.find((value) => { return value.name == "lucid_assistant"; });
+  const lucidAssistantTagId = lucidAssistantTag ? lucidAssistantTag.id : null;
+
   let messages = data.finalMesSend;
-  let narratorRE = new RegExp(`<\\|start_header_id\\|>writer character (.*${extensionSettings.narrator_substr}[^<]*)<\\|end_header_id\\|>`);
-  let assistantRE = new RegExp(`<\\|start_header_id\\|>writer character (.*${extensionSettings.assistant_substr}[^<]*)<\\|end_header_id\\|>`);
   let oocRE = new RegExp(`<\\|start_header_id\\|>writer character ([^<]+)<\\|end_header_id\\|>([\\n\\r]*)\\(\\(Out-of-Character\\)\\)`);
+  let generalRE = new RegExp(`<\\|start_header_id\\|>writer character ([^<]+)<\\|end_header_id\\|>`, "g");
 
   for (let index = 0; index < messages.length; index++) {
     let currentMessage = messages[index];
 
-    let match = currentMessage.message.match(narratorRE);
-    while (match) {
-      currentMessage.message = currentMessage.message.replace(narratorRE, "<|start_header_id|>writer narration<|end_header_id|>")
-      match = currentMessage.message.match(narratorRE);
+    if (lucidNarratorTagId || lucidAssistantTagId) {
+      let match = generalRE.exec(currentMessage.message);
+      while (match) {
+        const characterName = match[1];
+        const character = context.characters.find((value) => { return value.name == characterName; });
+        if (!character) {
+          match = generalRE.exec(currentMessage.message);
+          continue;
+        }
+
+        const tags = context.tagMap[character.avatar];
+
+        if (tags.includes(lucidNarratorTagId)) {
+          currentMessage.message = currentMessage.message.replace(match[0], "<|start_header_id|>writer narration<|end_header_id|>")
+        } else if (tags.includes(lucidAssistantTagId)) {
+          currentMessage.message = currentMessage.message.replace(match[0], "<|start_header_id|>assistant<|end_header_id|>")
+        }
+
+        match = generalRE.exec(currentMessage.message);
+      }
     }
 
-    match = currentMessage.message.match(assistantRE);
-    while (match) {
-      currentMessage.message = currentMessage.message.replace(assistantRE, "<|start_header_id|>assistant<|end_header_id|>")
-      match = currentMessage.message.match(assistantRE);
-    }
-
-    match = currentMessage.message.match(oocRE);
+    let match = currentMessage.message.match(oocRE);
     while (match) {
       currentMessage.message = currentMessage.message.replace(oocRE, "<|start_header_id|>user<|end_header_id|>$2")
       match = currentMessage.message.match(oocRE);
@@ -70,7 +85,7 @@ function onChatUpdated(messageId) {
 
       // Change avatar to ooc image
       let avatarImg = $(mes).find(".avatar img");
-      let occPath = "/" + extensionFolderPath + "/img/ooc.png";
+      let occPath = "/" + extensionFolderPath + "/" + oocImagePath;
       avatarImg.attr("src", occPath);
     }
   });
@@ -83,20 +98,6 @@ async function loadSettings() {
       extensionSettings[property] = defaultSettings[property];
     }
   }
-
-  // Updating settings in the UI
-  $("#narrator_substr_setting").prop("value", extensionSettings.narrator_substr);
-  $("#assistant_substr_setting").prop("value", extensionSettings.assistant_substr);
-}
-
-function onNarratorSubstrChanged(event) {
-  extensionSettings.narrator_substr = $(event.target).prop("value");
-  saveSettingsDebounced();
-}
-
-function onAssistantSubstrChanged(event) {
-  extensionSettings.assistant_substr = $(event.target).prop("value");
-  saveSettingsDebounced();
 }
 
 function runOOCSlashCommand(namedArgs, unnamedArgs) {
@@ -149,10 +150,6 @@ jQuery(async () => {
   // extension_settings and extensions_settings2 are the left and right columns of the settings menu
   // Left should be extensions that deal with system functions and right should be visual/UI related 
   $("#extensions_settings").append(settingsHtml);
-
-  // These are examples of listening for events
-  $("#narrator_substr_setting").on("input", onNarratorSubstrChanged);
-  $("#assistant_substr_setting").on("input", onAssistantSubstrChanged);
 
   // Load settings when starting things up (if you have any)
   loadSettings();
