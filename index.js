@@ -47,7 +47,7 @@ function onPromptGenerated(data) {
         const tags = context.tagMap[character.avatar];
 
         if (tags.includes(lucidNarratorTagId)) {
-          currentMessage.message = currentMessage.message.replace(match[0], "<|start_header_id|>writer narration<|end_header_id|>")
+          currentMessage.message = currentMessage.message.replace(match[0], "<|start_header_id|>writer narrative<|end_header_id|>")
         } else if (tags.includes(lucidAssistantTagId)) {
           currentMessage.message = currentMessage.message.replace(match[0], "<|start_header_id|>assistant<|end_header_id|>")
         }
