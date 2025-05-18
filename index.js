@@ -15,14 +15,16 @@ const extensionName = "SillyTavern-Lucid";
 const extensionFolderPath = `scripts/extensions/third-party/${extensionName}`;
 const extensionSettings = extension_settings[extensionName];
 const defaultSettings = {
+  narratorTag: "lucid_narrator",
+  assistantTag: "lucid_assistant"
 };
 
 function onPromptGenerated(data) {
   const context = getContext();
 
-  const lucidNarratorTag = context.tags.find((value) => { return value.name == "lucid_narrator"; });
+  const lucidNarratorTag = context.tags.find((value) => { return value.name == extensionSettings.narratorTag; });
   const lucidNarratorTagId = lucidNarratorTag ? lucidNarratorTag.id : null;
-  const lucidAssistantTag = context.tags.find((value) => { return value.name == "lucid_assistant"; });
+  const lucidAssistantTag = context.tags.find((value) => { return value.name == extensionSettings.assistantTag; });
   const lucidAssistantTagId = lucidAssistantTag ? lucidAssistantTag.id : null;
 
   let messages = data.finalMesSend;
@@ -98,6 +100,19 @@ async function loadSettings() {
       extensionSettings[property] = defaultSettings[property];
     }
   }
+
+  $("#narrator_tag_setting").prop("value", extensionSettings.narratorTag);
+  $("#assistant_tag_setting").prop("value", extensionSettings.assistantTag);
+}
+
+function onNarratorTagChanged(event) {
+  extensionSettings.narratorTag = $(event.target).prop("value");
+  saveSettingsDebounced();
+}
+
+function onAssistantTagChanged(event) {
+  extensionSettings.assistantTag = $(event.target).prop("value");
+  saveSettingsDebounced();
 }
 
 function runOOCSlashCommand(namedArgs, unnamedArgs) {
@@ -153,6 +168,8 @@ jQuery(async () => {
 
   // Load settings when starting things up (if you have any)
   loadSettings();
+  $("#narrator_tag_setting").on("input", onNarratorTagChanged);
+  $("#assistant_tag_setting").on("input", onAssistantTagChanged);
 
   setupOOCSlashCommand();
 
