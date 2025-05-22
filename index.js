@@ -7,7 +7,7 @@ import { saveSettingsDebounced, event_types, eventSource, sendMessageAsUser } fr
 const oocImagePath = "img/ooc.png";
 const oocToken = "((Out-of-Character))";
 const oocCharacterName = "Out of Character";
-const extensionName = "SillyTavern-Lucid";
+const extensionName = "Lucid-ST";
 const extensionFolderPath = `scripts/extensions/third-party/${extensionName}`;
 const extensionSettings = extension_settings[extensionName];
 const defaultSettings = {
