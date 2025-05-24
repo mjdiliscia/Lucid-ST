@@ -145,6 +145,10 @@ function onChatUpdated(_) {
  */
 async function loadSettings() {
   // Initialize unset settings with their default values
+  if (extensionSettings === undefined) {
+    extension_settings[extensionName] = {}
+    extensionSettings = extension_settings[extensionName]
+  }
   for (let property in defaultSettings) {
     if (extensionSettings[property] === undefined) {
       extensionSettings[property] = defaultSettings[property];
