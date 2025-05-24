@@ -9,11 +9,12 @@ const oocToken = "((Out-of-Character))";
 const oocCharacterName = "Out of Character";
 const extensionName = "Lucid-ST";
 const extensionFolderPath = `scripts/extensions/third-party/${extensionName}`;
-const extensionSettings = extension_settings[extensionName];
 const defaultSettings = {
   narratorTag: "lucid_narrator",
   assistantTag: "lucid_assistant"
 };
+
+let extensionSettings = extension_settings[extensionName];
 
 /**
  * Finds and replaces all narrator, assistant and ooc headers with those expected by Lucid, in all historic messages.
