@@ -1,4 +1,4 @@
-# SillyTavern-Lucid Support Extension
+# Lucid-ST Support Extension
 
 This extension provides basic support for internal [DreamGen's Lucid](https://huggingface.co/dreamgen/lucid-v1-nemo) multi-character capabilities.
 
