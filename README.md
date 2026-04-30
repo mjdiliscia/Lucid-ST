@@ -1,3 +1,5 @@
+*This repository was moved to https://codeberg.org/mjdiliscia/SillyTavern-Lucid and this location won't receive any future updates.*
+
 # Lucid-ST Support Extension
 
 This extension provides basic support for internal [DreamGen's Lucid](https://huggingface.co/dreamgen/lucid-v1-nemo) multi-character capabilities.
